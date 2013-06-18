@@ -4,6 +4,10 @@ This is a fork of the guacamole-client project that greatly simplifies the confi
 removes the Guacamole login page and removes the requirement to pre-configure each and every RDP/VNC/SSH server in the
 Guacamole configuration file.  Now users can specify the address that they want to connect to on-the-fly.
 
+Click [here] [1] for a screenshot of the modified user interface.
+
+  [1]: http://i.imgur.com/bvN4qZV.png "screenshot"
+
 Purpose
 -------
 The purpose of this modification is to allow Guacamole to become fully self-service.  This mod removes all reliance on
