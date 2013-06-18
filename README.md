@@ -1,4 +1,4 @@
-guacamole-client fast-connect-mod
+Guacamole Fast Connect
 =================================
 This is a fork of the guacamole-client project that greatly simplifies the configuration and use of Guacamole.  This 
 removes the Guacamole login page and removes the requirement to pre-configure each and every RDP/VNC/SSH server in the
