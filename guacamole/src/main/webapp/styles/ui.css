@@ -439,3 +439,12 @@ div#logout-panel {
     text-align: center;
     margin: 1em;
 }
+
+#login-form #login-fields .options hr {
+    color: #fff;
+}
+
+#login-form #login-fields .options input[type="checkbox"],
+#login-form #login-fields .options input[type="radio"] {
+    width: inherit;
+}

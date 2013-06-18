@@ -30,6 +30,7 @@ import net.sourceforge.guacamole.GuacamoleSecurityException;
 import net.sourceforge.guacamole.net.GuacamoleSocket;
 import net.sourceforge.guacamole.net.GuacamoleTunnel;
 import net.sourceforge.guacamole.net.auth.Connection;
+import net.sourceforge.guacamole.net.auth.simple.SimpleConnection;
 import net.sourceforge.guacamole.net.auth.Credentials;
 import net.sourceforge.guacamole.net.auth.Directory;
 import net.sourceforge.guacamole.net.auth.UserContext;
@@ -39,6 +40,7 @@ import net.sourceforge.guacamole.net.event.TunnelConnectEvent;
 import net.sourceforge.guacamole.net.event.listener.TunnelCloseListener;
 import net.sourceforge.guacamole.net.event.listener.TunnelConnectListener;
 import net.sourceforge.guacamole.protocol.GuacamoleClientInformation;
+import net.sourceforge.guacamole.protocol.GuacamoleConfiguration;
 import net.sourceforge.guacamole.servlet.GuacamoleHTTPTunnelServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,30 +181,106 @@ public class BasicGuacamoleTunnelServlet extends AuthenticatingHttpServlet {
                 throw e;
             }
 
-            // Get ID of connection
-            String id = request.getParameter("id");
-
             // Get credentials
             final Credentials credentials = getCredentials(httpSession);
 
             // Get context
             UserContext context = getUserContext(httpSession);
 
-            // Get connection directory
-            Directory<String, Connection> directory = context.getConnectionDirectory();
-
             // If no credentials in session, not authorized
             if (credentials == null)
-                throw new GuacamoleSecurityException("Cannot connect - user not logged in.");
+                throw new GuacamoleSecurityException("No valid connection details provided.");
 
-            // Get authorized connection
-            Connection connection = directory.get(id);
-            if (connection == null) {
-                logger.warn("Connection id={} not found.", id);
-                throw new GuacamoleSecurityException("Requested connection is not authorized.");
+            // Start building connection info
+            GuacamoleConfiguration configuration = new GuacamoleConfiguration();
+
+            // Get hostname from request
+            String host = request.getParameter("host");
+            
+            // Validate that a host was actually specified
+            if (host == null) {
+                logger.info("No host specified");
+                return null;
             }
 
-            logger.info("Successful connection from {} to \"{}\".", request.getRemoteAddr(), id);
+            // Trim whitespace
+            host = host.trim();
+           
+            // If a : was found in the host, parse out the port and host
+            int port = -1;
+            int portsplit = host.lastIndexOf(':');
+            if (portsplit != -1 && portsplit < (host.length() - 1)) {
+                String portstring = host.substring(portsplit + 1);
+                try {
+                    port = Integer.parseInt(portstring);
+                } catch (NumberFormatException e) {
+                    port = -1;
+                }
+                host = host.substring(0, portsplit);
+            }
+
+            // Pass the host through regex to ensure that nothing nasty is in the name
+            host = host.replaceAll("[^-.0-9A-Za-z]", "");
+
+            String protocol = request.getParameter("protocol");
+            int defaultPort;
+            
+            // If a protocol was not specified, default to RDP
+            if (protocol == null) {
+                logger.error("Protocol is null, setting to rdp");
+                protocol = "rdp";
+            } else {
+                protocol = protocol.toLowerCase().trim();
+                logger.error("Got protocol " + protocol);
+            }
+            
+            // Set the specified protocol and make note of the default port number for that protocol
+            if (protocol.equals("vnc")) {
+                protocol = "vnc";
+                if (port == -1) {
+                    port = 5900;
+                } else if (port <= 9) {
+                    // If port is 9 or less, assume that user specified a display number rather than a port number
+                    port += 5900;
+                }
+                String colorDepth = request.getParameter("color-depth");
+                if (colorDepth != null) {
+                    configuration.setParameter("color-depth", colorDepth);
+                }
+                String password = request.getParameter("password");
+                if (password != null) {
+                    configuration.setParameter("password", password);
+                }
+            } else if (protocol.equals("ssh")) {
+                protocol = "ssh";
+                if (port == -1) {
+                    port = 22;
+                }
+                String fontSize = request.getParameter("font-size");
+                if (fontSize != null) {
+                    configuration.setParameter("font-size", fontSize);
+                }
+            } else {
+                protocol = "rdp";
+                if (port == -1) {
+                    port = 3389;
+                }
+                String colorDepth = request.getParameter("color-depth");
+                if (colorDepth != null) {
+                    configuration.setParameter("color-depth", colorDepth);
+                }
+            }
+            configuration.setProtocol(protocol);
+            
+            // Set hostname and port parameters with the parsed values
+            String portstring = String.valueOf(port);
+            configuration.setParameter("hostname", host);
+            configuration.setParameter("port", portstring);
+
+            SimpleConnection connection = new SimpleConnection("identifier-string", configuration);
+
+            // Log the connection
+            logger.info("Opening connection from {} to \"{}\".", request.getRemoteAddr(), protocol + "://" + host + ":" + portstring);
 
             // Get client information
             GuacamoleClientInformation info = new GuacamoleClientInformation();

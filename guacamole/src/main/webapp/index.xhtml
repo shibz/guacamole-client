@@ -32,38 +32,93 @@
 
     <body>
 
-        <div id="login-ui" style="display: none">
+        <div id="login-ui" style="position: static;">
             <div id="login-dialog-middle">
 
                 <div id="login-dialog">
 
                     <p id="login-error"></p>
 
-                    <form id="login-form" action="#" method="post">
+                    <form id="login-form" action="client.xhtml" method="get" target="_blank">
 
                         <div id="login-fields">
                             <table>
                                 <tr>
-                                    <th>Username</th>
-                                    <td><input type="text" name="username" id="username" autofocus="autofocus"/></td>
+                                    <th>Address</th>
+                                    <td><input type="text" name="host" id="host" autofocus="autofocus"/></td>
+                                </tr>
+                                <tr class="options">
+                                    <th>Protocol</th>
+                                    <td>
+                                        <input type="radio" name="protocol" value="rdp" id="rdp" checked="checked"/><label for="rdp">RDP</label><br/>
+                                        <input type="radio" name="protocol" value="ssh" id="ssh"/><label for="ssh">SSH</label><br/>
+                                        <input type="radio" name="protocol" value="vnc" id="vnc"/><label for="vnc">VNC</label>
+                                    </td>
+                                </tr>
+                                <tr class="option-rdp not-option-ssh not-option-vnc">
+                                    <th>Width</th>
+                                    <td><input type="text" name="width" id="width" value="1024"/></td>
+                                </tr>
+                                <tr class="option-rdp not-option-ssh not-option-vnc">
+                                    <th>Height</th>
+                                    <td><input type="text" name="height" id="height" value="768"/></td>
+                                </tr>
+                                <tr class="option-vnc option-rdp not-option-ssh">
+                                    <th>Color Depth</th>
+                                    <td>
+                                        <select id="color-depth" name="color-depth">
+                                            <option value="8">8 bit</option>
+                                            <option value="16" selected="selected">16 bit</option>
+                                            <option value="24">24 bit</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr class="option-vnc not-option-ssh not-option-rdp">
+                                    <th>Password</th>
+                                    <td><input type="text" name="password" id="password"/><br/>[Note: Password is logged in plain text]</td>
+                                </tr>
+                                <tr class="option-ssh not-option-vnc not-option-rdp">
+                                    <th>Font Size</th>
+                                    <td><input type="text" name="font-size" id="font-size" value="12"/></td>
                                 </tr>
                                 <tr>
-                                    <th>Password</th>
-                                    <td><input type="password" name="password" id="password"/></td>
+                                    <th colspan="2" class="options">
+                                        <hr/>
+                                        Options:
+                                    </th>
                                 </tr>
+                                <tr class="options">
+                                    <td colspan="2">
+                                        <a title="If checked, remote displays are automatically scaled to exactly fit within the browser window. If unchecked, remote displays are always shown at their natural resolution, even if doing so causes the display to extend beyond the bounds of the window."><label for="auto-fit">Stretch to fit: </label><input type="checkbox" id="auto-fit"/></a>
+                                    </td>
+                                </tr>
+                                <tr class="options">
+                                    <td colspan="2">
+                                        <a title="If on a device or network where bandwidth usage must be kept to a minimum, you may wish to check this box and disable sound. This can also be necessary if a device doesn't actually support sound, but claims to, resulting in wasted bandwidth."><label for="disable-sound">Disable sound: </label><input type="checkbox" id="disable-sound"/></a>
+                                    </td>
+                                </tr>
+
                             </table>
 
                             <img class="logo" src="images/guac-mono-192.png" alt=""/>
                         </div>
 
-                        <div id="buttons">
-                            <input type="submit" name="login" id="login" value="Login"/>
+                        <div id="buttons" style="top: -55px; left: -5px; position: relative;">
+                            <input type="submit" name="login" id="login" value="Connect"/>
                         </div>
 
                     </form>
                 </div>
 
             </div>
+        </div>
+
+        <h2>Clipboard</h2>
+        <div id="clipboardDiv">
+            <p>
+            Text copied/cut within Guacamole will appear here. Changes to the text will affect the remote clipboard, and will be pastable within the remote desktop. Use the textbox below as an interface between the client and server clipboards.
+            </p>
+            <textarea rows="10" cols="40" id="clipboard"></textarea>
         </div>
 
         <!-- Connection list UI -->
@@ -85,63 +140,13 @@
 
             <div id="all-connections-buttons">
             </div>
-
-            <h2>Clipboard</h2>
-            <div id="clipboardDiv">
-                <p>
-                Text copied/cut within Guacamole will appear here. Changes to the text will affect the remote clipboard, and will be pastable within the remote desktop. Use the textbox below as an interface between the client and server clipboards.
-                </p>
-                <textarea rows="10" cols="40" id="clipboard"></textarea>
-            </div>
-
-            <h2>Settings</h2>
-            <div id="settings">
-
-                <dl>
-                    <!-- Auto-fit display -->
-                    <dt>
-                        <input type="checkbox" id="auto-fit"/>
-                        Auto-fit display to browser window
-                    </dt>
-                    <dd>
-                        <p>
-                            If checked, remote displays are automatically
-                            scaled to exactly fit within the browser window. If
-                            unchecked, remote displays are always shown at their
-                            natural resolution, even if doing so causes the
-                            display to extend beyond the bounds of the window.
-                        </p>
-                    </dd>
-
-                    <!-- Enable/disable sound -->
-                    <dt>
-                        <input type="checkbox" id="disable-sound"/>
-                        Disable sound
-                    </dt>
-                    <dd>
-                        <p>
-                            If on a device or network where bandwidth usage must
-                            be kept to a minimum, you may wish to check this box
-                            and disable sound. This can also be necessary if a
-                            device doesn't actually support sound, but claims
-                            to, resulting in wasted bandwidth.
-                        </p>
-                        <p>
-                            <strong>Changing this setting will only affect
-                            future connections.</strong>
-                        </p>
-                    </dd>
-                </dl>
-
-            </div>
-
         </div>
 
         <div id="version-dialog">
             Guacamole ${project.version}
         </div>
 
-        <script type="text/javascript" src="scripts/service.js"></script>
+        <script type="text/javascript" src="scripts/jquery-1.10.1.min.js"></script>
         <script type="text/javascript" src="scripts/session.js"></script>
         <script type="text/javascript" src="scripts/history.js"></script>
         <script type="text/javascript" src="scripts/guac-ui.js"></script>

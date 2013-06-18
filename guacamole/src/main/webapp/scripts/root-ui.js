@@ -36,9 +36,11 @@ var GuacamoleRootUI = {
     },
 
     "fields": {
-        "username"  : document.getElementById("username"),
-        "password"  : document.getElementById("password"),
-        "clipboard" : document.getElementById("clipboard")
+        "host"  : document.getElementById("host"),
+        "clipboard" : document.getElementById("clipboard"),
+        "rdp" : document.getElementById("rdp"),
+        "ssh" : document.getElementById("ssh"),
+        "vnc" : document.getElementById("vnc")
     },
     
     "buttons": {
@@ -130,82 +132,10 @@ GuacamoleRootUI.addRecentConnection = function(connection) {
  * authenticated.
  */
 GuacamoleRootUI.reset = function() {
+    GuacamoleRootUI.views.login.style.display = "";
+    GuacamoleRootUI.views.connections.style.display = "none";
 
-    // Get parameters from query string
-    var parameters = window.location.search.substring(1);
-
-    function hasEntry(object) {
-        for (var name in object)
-            return true;
-        return false;
-    }
-
-    // Read connections
-    var connections;
-    try {
-        connections = GuacamoleService.Connections.list(parameters);
-
-        // Show admin elements if admin permissions available
-        var permissions = GuacamoleService.Permissions.list();
-        if (permissions.administer
-            || permissions.create_connection
-            || permissions.create_user
-            || hasEntry(permissions.update_user)
-            || hasEntry(permissions.remove_user)
-            || hasEntry(permissions.administer_user)
-            || hasEntry(permissions.update_connection)
-            || hasEntry(permissions.remove_connection)
-            || hasEntry(permissions.administer_connection))
-                GuacUI.addClass(document.body, "admin");
-            else
-                GuacUI.removeClass(document.body, "admin");
-
-    }
-    catch (e) {
-
-        // Show login UI if unable to get connections
-        GuacamoleRootUI.views.login.style.display = "";
-        GuacamoleRootUI.views.connections.style.display = "none";
-
-        return;
-
-    }
-
-    // Create pager for connections
-    var connection_pager = new GuacUI.Pager(GuacamoleRootUI.sections.all_connections);
-    connection_pager.page_capacity = 20;
-
-    // Add connection icons
-    for (var i=0; i<connections.length; i++) {
-
-        // Add connection to set
-        GuacamoleRootUI.connections[connections[i].id] = connections[i];
-
-        // Get connection element
-        var connection = new GuacUI.Connection(connections[i]);
-
-        // If screenshot present, add to recent connections
-        if (connection.hasThumbnail())
-            GuacamoleRootUI.addRecentConnection(connection);
-
-        // Add connection to connection list
-        connection_pager.addElement(
-            new GuacUI.Connection(connections[i]).getElement());
-
-    }
-
-    // Add buttons if more than one page
-    if (connection_pager.last_page != 0)
-        GuacamoleRootUI.sections.all_connections_buttons.appendChild(
-            connection_pager.getElement());
-
-    // Start at page 0
-    connection_pager.setPage(0);
-
-    // If connections could be retrieved, display list
-    GuacamoleRootUI.views.login.style.display = "none";
-    GuacamoleRootUI.views.connections.style.display = "";
-
+    return;
 };
 
 GuacamoleHistory.onchange = function(id, old_entry, new_entry) {
@@ -365,49 +295,11 @@ GuacamoleRootUI.buttons.manage.onclick = function() {
 };
 
 /*
- * Set handler for login
- */
-
-GuacamoleRootUI.sections.login_form.onsubmit = function() {
-
-    try {
-
-        // Attempt login
-        GuacamoleRootUI.login(
-            GuacamoleRootUI.fields.username.value,
-            GuacamoleRootUI.fields.password.value
-        );
-
-        // Ensure username/password fields are blurred after login attempt
-        GuacamoleRootUI.fields.username.blur();
-        GuacamoleRootUI.fields.password.blur();
-
-        // Reset UI
-        GuacamoleRootUI.reset();
-
-    }
-    catch (e) {
-
-        // Display error, reset and refocus password field
-        GuacamoleRootUI.messages.login_error.textContent = e.message;
-
-        // Reset and recofus password field
-        GuacamoleRootUI.fields.password.value = "";
-        GuacamoleRootUI.fields.password.focus();
-
-    }
-
-    // Always cancel submit
-    return false;
-
-};
-
-/*
  * Turn off autocorrect and autocapitalization on usename 
  */
 
-GuacamoleRootUI.fields.username.setAttribute("autocorrect", "off");
-GuacamoleRootUI.fields.username.setAttribute("autocapitalize", "off");
+GuacamoleRootUI.fields.host.setAttribute("autocorrect", "off");
+GuacamoleRootUI.fields.host.setAttribute("autocapitalize", "off");
 
 /*
  * Initialize UI
@@ -420,3 +312,17 @@ GuacamoleRootUI.reset();
  * will work in browsers that require this.
  */
 document.body.ontouchstart = function() {};
+
+
+$('document').ready(function(){
+    var radioClick = function(){
+        var protocol = $('input[name=protocol]:checked', '#login-form').val();
+        $('.not-option-' + protocol).hide();
+        $('.option-' + protocol).show();
+    }
+    $('input:radio').click(radioClick);
+    $('#login-form').submit(function(){
+    });
+    radioClick();
+});
+
